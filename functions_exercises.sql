@@ -5,7 +5,7 @@ SHOW tables;
 SELECT * FROM employees;
 /* 2. Write a query to find all employees whose last name starts and ends with 'E'. 
 Use concat() to combine their first and last name together as a single column named full_name.*/
-SELECT concat(first_name, ' ', last_name) AS fullname
+SELECT CONCAT(first_name, ' ', last_name) full_name
 FROM employees 
 WHERE last_name LIKE 'E%E'; 
 
