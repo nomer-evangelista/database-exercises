@@ -20,7 +20,7 @@ GROUP BY last_name;
 last names of all employees whose last names start and end with 'E'. */ 
 SELECT first_name, last_name
 FROM employees
-WHERE first_name LIKE 'E%E' AND last_name LIKE 'E%E'
+WHERE last_name LIKE 'E%E'
 GROUP BY first_name, last_name;
 
 /* 5. Write a query to find the unique last names with a 'q' but not 'qu'. 
