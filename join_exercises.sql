@@ -148,34 +148,49 @@ DESCRIBE employees; -- first_name, last_name, emp_no
 DESCRIBE salaries; -- emp_no, to_date
 DESCRIBE departments; -- dept_no, dept_name
 DESCRIBE dept_emp; -- emp_no, dept_no, to-date
+DESCRIBE dept_manager; -- emp_no, dept_no, from_date, to_date
 
-SELECT 
-	e.first_name,
-    e.last_name,
-    s.salary,
-    dept.dept_name 
-FROM employees AS e
+SELECT e.first_name, e.last_name, s.salary, dept.dept_name
+FROM employees AS e 
+JOIN dept_manager AS dm
+	ON e.emp_no = dm.emp_no AND dm.to_date > NOW()
 JOIN salaries AS s
 	ON e.emp_no = s.emp_no AND s.to_date > NOW()
-JOIN dept_emp AS de
-	ON de.emp_no = e.emp_no AND de.to_date > NOW()
 JOIN departments AS dept
-	ON dept.dept_no = de.dept_no
--- GROUP BY dept.dept_name
-ORDER BY dept.dept_name DESC 
+	ON dept.dept_no = dm.dept_no
+ORDER BY salary DESC 
+LIMIT 1
 ;
 
+/* 10. Determine the average salary for each department. 
+Use all salary information and round your results. */
+SELECT d.dept_name -- s.salary AS Average_Salary -- dept_name, s.salary AS average_salary
+FROM salaries AS s
+JOIN dept_emp AS de
+	ON de.emp_no = s.emp_no 
+JOIN departments AS d
+	ON d.dept_no = de.dept_no
+GROUP BY d.dept_name 
+-- ORDER BY Average_Salary ASC
+;
 
-
-
-
-
-
-
-
-
-
-
+-- BONUS
+/* 11. Find the names of all current employees, their department name, and their current manager's name. */
+SELECT  
+	CONCAT(e.first_name, ' ', e.last_name) AS 'Employee Name', 
+	dept.dept_name AS 'Department Name',
+    CONCAT(manager.first_name, ' ', manager.last_name) AS 'Manager Name'
+FROM employees AS e
+JOIN dept_emp AS de
+	ON de.emp_no = e.emp_no AND de.to_date > CURDATE()
+JOIN dept_manager AS dm
+	ON dm.dept_no = de.dept_no AND dm.to_date > NOW() 
+JOIN departments AS dept
+	ON dept.dept_no = dm.dept_no
+JOIN employees AS manager
+	ON manager.emp_no = dm.emp_no
+ORDER BY dept.dept_name
+;
 
 
 
