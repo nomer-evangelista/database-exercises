@@ -76,24 +76,24 @@ FROM departments AS d
 GROUP BY dept_group
 ;
 
+# BONUS: Remove duplicate employees from exercise 1.
 
-SELECT *
-FROM departments
-WHERE dept_name IN (SELECT 
-			dept_name, ROUND(AVG(salary), 2), 
-		CASE
-			WHEN dept_name IN ('Customer Service') THEN 'Customer Service' 
-            WHEN dept_name IN ('Research', 'Development') THEN 'R&D'
-            WHEN dept_name IN ('Sales', 'Marketing') THEN 'Sales & Marketing'
-            WHEN dept_name IN ('Production', 'Quality Management') THEN 'Prod & QM'
-            WHEN dept_name IN ('Finance', 'Human Resources') THEN 'Finance & HR'
-		ELSE 'Others'
-		END AS 'department group'
-		FROM departments AS d
-			JOIN dept_emp AS de
-				ON de.dept_no = d.dept_no AND de.to_date > NOW()
-			JOIN salaries AS s
-				ON s.emp_no = de.emp_no AND s.to_date > NOW()
-		GROUP BY dept_name)
+SELECT 
+		emp_no,
+        CONCAT(first_name, ' ', last_name),
+        dept_no,
+        from_date,
+        to_date,
+		IF (to_date > NOW(), True, False) as 'current_employee'
+FROM employees AS e
+	JOIN dept_emp AS de
+		USING (emp_no)
+WHERE (emp_no, to_date) IN
+			(SELECT emp_no, max(to_date)
+            FROM dept_emp
+            GROUP BY emp_no)
 ;
+
+
+
 
