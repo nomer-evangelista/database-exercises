@@ -47,5 +47,5 @@ SELECT * FROM employees WHERE hire_date BETWEEN '1990-01-01' AND '1999-12-31' AN
 /* 11. Find all unique last names that have a 'q' in their last name. */
 SELECT DISTINCT * FROM employees WHERE last_name LIKE '%q%';
 
-/* Find all unique last names that have a 'q' in their last name but not 'qu'.*/
+/* 12. Find all unique last names that have a 'q' in their last name but not 'qu'.*/
 SELECT DISTINCT * FROM employees WHERE last_name LIKE '%q%' AND last_name NOT LIKE '%qu%';
