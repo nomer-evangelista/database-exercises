@@ -107,7 +107,7 @@ UPDATE payment
 SELECT *
 FROM employees;
 SELECT *
-FROM new_employee;
+FROM new_employee_table;
 
 
 DESCRIBE employees; -- emp_no
@@ -115,72 +115,80 @@ DESCRIBE salaries; -- emp_no, salary, from_date, to_date
 DESCRIBE dept_emp; -- emp_no, dept_no, from_date, to_date
 DESCRIBE departments; -- dept_no, dept_name
 
-CREATE TEMPORARY TABLE new_employee_table AS 		-- create new main table
-SELECT 		
-		dept_name,
-		salary
+SELECT 
+			dept_name,
+            AVG(salary)
 FROM employees.departments AS dept
 	JOIN employees.dept_emp AS de
 		USING (dept_no)
 	JOIN employees.salaries AS s
 		USING (emp_no)
+GROUP BY dept_name
 ;
 
-DROP TABLE new_employee_table;		
-
-ALTER TABLE new_employee_table  	-- Add average salary column name to new_employee_table main table
-	ADD average_salary float(10)
-;
-
-ALTER TABLE new_employee_table		-- Add standard deviation column name to new_employee_table main table
-	ADD standard_deviation float(10)
-;
-
-UPDATE new_employee_table
-	SET average_salary = (SELECT ROUND(AVG(salary), 2)
-						FROM information_zscore
-						WHERE to_date > NOW()) 
-;
-
-UPDATE new_employee_table
-	SET standard_deviation = (SELECT ROUND(STDDEV(salary), 2)
-							FROM information_zscore
-							WHERE to_date > NOW())
+CREATE TEMPORARY TABLE new_employee_table AS -- create new main table
+			(SELECT 		
+					dept_name,
+					AVG(salary)
+			FROM employees.departments AS dept
+				JOIN employees.dept_emp AS de
+					USING (dept_no)
+				JOIN employees.salaries AS s
+					USING (emp_no)
+			GROUP BY dept_name)
 ;
 
 SELECT *
 FROM new_employee_table
 ;
-
-UPDATE payment
-	SET updated_payment = amount * 100
-;
-
-
-
-
-
-CREATE TEMPORARY TABLE information_zscore AS 	-- create new zscore table
-SELECT 
-		salary,
-		to_date
-FROM employees.salaries
-;
-
-SELECT *
-FROM information_zscore
-;
+DROP TABLE new_employee_table;		
 
 SELECT 
 		ROUND(AVG(salary), 2),
         ROUND(STDDEV(salary), 2)
-FROM information_zscore
+FROM employees.salaries
 WHERE to_date > NOW()
 ;
 
+CREATE TEMPORARY TABLE new_employee_table_2 AS
+		(SELECT 
+				ROUND(AVG(salary), 2) AS avg_salary,
+				ROUND(STDDEV(salary), 2) AS STD
+		FROM employees.salaries
+		WHERE to_date > NOW())
+;
+ 
+SELECT *
+FROM new_employee_table_2;
+DROP TABLE new_employee_table_2;
 
-SELECT 
-		salary,  -- Z Score
+ALTER TABLE new_employee_table		-- Add standard deviation column name to new_employee_table main table
+	ADD avg_salary float(10);
+;
+
+ALTER TABLE new_employee_table
+	ADD STD float(10);
+    
+ALTER TABLE new_employee_table
+	ADD zscore float(10);
+
+UPDATE new_employee_table
+	SET avg_salary = (SELECT avg_salary
+						FROM new_employee_table_2)
+;
+
+UPDATE new_employee_table
+	SET STD = (SELECT STD 
+				FROM new_employee_table_2)
+;
+
+UPDATE new_employee_table
+	SET zscore = (SELECT zscore 
+					FROM information_zscore)
+;
+
+SELECT 		-- to get the value of zscore
+		salary,  
 		(salary - (SELECT ROUND(AVG(salary), 2) 
 		FROM employees.salaries
 		WHERE to_date > NOW()))
@@ -193,7 +201,27 @@ WHERE to_date > NOW()
 ORDER BY zscore DESC
 ;
 
-/* Needed current salary and dept_name; another table with only avg salary and std and add zscore */
+CREATE TEMPORARY TABLE information_zscore AS 	-- create new zscore table
+			(SELECT  
+					(salary - (SELECT ROUND(AVG(salary), 2) 
+			FROM employees.salaries
+			WHERE to_date > NOW()))
+			/
+			(SELECT ROUND(stddev(salary), 2) -- standard deviation for salary
+			FROM employees.salaries
+			WHERE to_date > now()) AS zscore
+	FROM employees.salaries
+	WHERE to_date > NOW()
+	ORDER BY zscore DESC)
+;
+
+SELECT *
+FROM information_zscore
+;
+
+DROP TABLE information_zscore
+;
+
 
 /* Needed current salary and dept_name; another table with only avg salary and std and add zscore 
 add add table of salary and std to the main table and add zscore to the main table */
